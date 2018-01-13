@@ -12,6 +12,8 @@ api_user_key = "CREATE"
 x = PasteApiBinClient(api_dev_key, api_user_key=api_user_key)
 
 print (x.trends())
-print (x.user('Matthewm'))
+print (x.user_pastes('Matthewm'))
 
+PasteBinApiClient.user_pastes('Matthewm')
+PasteBinApiClient.paste('6cJEZfcH')
 ```

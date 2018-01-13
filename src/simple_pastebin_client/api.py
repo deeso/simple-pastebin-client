@@ -1,11 +1,10 @@
 from xml.etree.ElementTree import fromstring
-from bs4 import BeautifulSoup, SoupStrainer
 from xmljson import parker
 import requests
 from .consts import *
 import tzlocal
 import json
-from .util import has_attr, extract_date, extract_pastes_titles, \
+from .util import extract_pastes_titles, \
                   extract_paste_content, extract_date_from_html
 
 
@@ -63,7 +62,7 @@ class PasteBinApiClient(object):
             return self.xml_to_json(w)
         raise Exception(data)
 
-    def raw(self, paste_key):
+    def raw_user_paste(self, paste_key):
         data = {
                 API_OPTION: SHOW_PASTE,
                 API_DEV_KEY: self.api_key,
@@ -73,26 +72,36 @@ class PasteBinApiClient(object):
         rsp = requests.post(API_RAW, data=data)
         return rsp.content
 
-    def paste_raw(self, paste_key):
+    @classmethod
+    def raw_paste(self, paste_key):
         url = URL + "/raw/" + paste_key
         rsp = requests.get(url, headers=HEADERS)
         return rsp.content
 
-    def paste(self, paste_key):
-        return extract_paste_content(self.paste_html(paste_key), self.tz)
+    @classmethod
+    def paste(cls, paste_key, get_raw=True, tz=TZ):
+        url = URL + "/raw/" + paste_key
+        info = extract_paste_content(cls.paste_html(paste_key), tz)
+        info['paste'] = url
+        if get_raw:
+            info['data'] = cls.raw_paste(paste_key)
+        return info
 
-    def paste_html(self, paste_key):
+    @classmethod
+    def paste_html(cls, paste_key):
         url = URL + "/" + paste_key
         rsp = requests.post(url, headers=HEADERS)
         return rsp.content
 
+    @classmethod
     def paste_date(self, paste_key, html_page=None, tz=None):
         tz = self.tz if tz is None else tz
         if html_page is None:
             html_page = self.paste_html(paste_key)
         return extract_date_from_html(html_page, tz=tz)
 
-    def user_pastes(self, username, tz=None):
+    @classmethod
+    def user_pastes(cls, username, tz=None):
         results = []
         url = URL_USER.format(**{'user': username})
         # options = webdriver.ChromeOptions()
@@ -103,16 +112,12 @@ class PasteBinApiClient(object):
         data = rsp.text
         pastes_titles = extract_pastes_titles(data)
         for p, t in pastes_titles:
-            pdata = self.paste_raw(p)
-            date = self.paste_date(p, html_page=None, tz=tz)
-            purl = URL + '/{}'.format(p)
-            results.append({'data': pdata,
-                            'title': t,
-                            'paste': purl,
-                            'date': date})
+            info = cls.paste(p, get_raw=True)
+            results.append(info)
         return results
 
-    def xml_to_json(self, data):
+    @classmethod
+    def xml_to_json(cls, data):
         s = json.dumps(parker.data(fromstring(data)))
         # TODO FIXME this is a hack
         if len(json.loads(s).values()) > 0:
