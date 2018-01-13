@@ -5,7 +5,8 @@ import requests
 from .consts import *
 import tzlocal
 import json
-from .util import has_attr, extract_date, extract_pastes_titles
+from .util import has_attr, extract_date, extract_pastes_titles, \
+                  extract_paste_content
 
 
 class PasteBinApiClient(object):
@@ -78,6 +79,9 @@ class PasteBinApiClient(object):
         return rsp.content
 
     def paste(self, paste_key):
+        return extract_paste_content(self.paste_html(paste_key), self.tz)
+
+    def paste_html(self, paste_key):
         url = URL + "/" + paste_key
         rsp = requests.post(url, headers=HEADERS)
         return rsp.content

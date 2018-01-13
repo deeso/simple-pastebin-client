@@ -40,3 +40,9 @@ MFF = 'Mozilla/5.0 (Windows NT x.y; rv:10.0) Gecko/20100101 Firefox/10.0'
 HEADERS = {'User-Agent': MFF}
 
 EXPECTED_PB_TIME = "%A %d %B %Y  %H:%M:%S %p %Z"
+
+DIV = 'div'
+CLASS = 'class'
+PBOX_1 = 'paste_box_line1'
+PBOX_2 = 'paste_box_line2'
+TEXTAREA = 'textarea'
