@@ -6,7 +6,7 @@ from .consts import *
 import tzlocal
 import json
 from .util import has_attr, extract_date, extract_pastes_titles, \
-                  extract_paste_content
+                  extract_paste_content, extract_date_from_html
 
 
 class PasteBinApiClient(object):
@@ -86,33 +86,13 @@ class PasteBinApiClient(object):
         rsp = requests.post(url, headers=HEADERS)
         return rsp.content
 
-    def paste_date(self, paste_key, html_page=None,
-                   tz=None, tz_conversion=None):
+    def paste_date(self, paste_key, html_page=None, tz=None):
         tz = self.tz if tz is None else tz
         if html_page is None:
-            html_page = self.paste(paste_key)
+            html_page = self.paste_html(paste_key)
+        return extract_date_from_html(html_page, tz=tz)
 
-        _span = BeautifulSoup(html_page, 'html.parser',
-                              parse_only=SoupStrainer('span'))
-        spans = [i for i in _span.find_all() if has_attr(i, 'title')]
-        if len(spans) == 1:
-            if tz_conversion is not None:
-                tz = tz_conversion(spans[0]['title'])
-                tz = self.tz if tz is None else tz
-            return extract_date(spans[0]['title'], tz=tz)
-        else:
-            # TODO fixme this is bad
-            for s in spans:
-                try:
-                    if tz_conversion is not None:
-                        tz = tz_conversion(s)
-                        tz = self.tz if tz is None else tz
-                    return extract_date(s, tz=tz)
-                except:
-                    pass
-        return None
-
-    def user_pastes(self, username, tz_conversion=None):
+    def user_pastes(self, username, tz=None):
         results = []
         url = URL_USER.format(**{'user': username})
         # options = webdriver.ChromeOptions()
@@ -124,7 +104,7 @@ class PasteBinApiClient(object):
         pastes_titles = extract_pastes_titles(data)
         for p, t in pastes_titles:
             pdata = self.paste_raw(p)
-            date = self.paste_date(p, tz_conversion=tz_conversion)
+            date = self.paste_date(p, html_page=None, tz=tz)
             purl = URL + '/{}'.format(p)
             results.append({'data': pdata,
                             'title': t,
