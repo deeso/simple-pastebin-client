@@ -7,3 +7,4 @@ selenium
 beautifulsoup4
 pytz
 tzlocal
+google-api-python-client

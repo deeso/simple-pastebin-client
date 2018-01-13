@@ -4,3 +4,8 @@
     api_user_key = ''
     users_list = [
                  ]
+    key = ""
+    sig = ""
+    cse_cx = ""
+    query = ""
+    cse_tok = ""

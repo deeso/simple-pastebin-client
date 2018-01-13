@@ -24,23 +24,30 @@ def extract_date_from_html(html_page, tz='US/Central'):
     return ''
 
 
+def date_to_timestamp(date_str):
+    return int(datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%SZ").timestamp())
+
+
 def extract_date(date_str, tz='US/Central'):
     tz = tzlocal.get_localzone().zone if tz is None else tz
     nd = date_str.replace('st ', ' ').replace('th ', ' ').replace(' of ', ' ')
     nd = nd.replace('rd ', ' ').replace('nd ', ' ').replace('Augu', 'August')
     dt = datetime.datetime.strptime(nd, EXPECTED_PB_TIME)
     dt_loc = timezone(tz).localize(dt)
-    return dt_loc.astimezone(utc).isoformat()
+    return dt_loc.astimezone(utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def extract_elements(html_page, tag, attr, value_in):
+def extract_elements(html_page, tag, attr, value_in=None):
     tags = BeautifulSoup(html_page, 'html.parser',
                          parse_only=SoupStrainer(tag))
 
     vals = []
-    for i in [j for j in tags.findAll()]:
-        if has_attr(i, attr) and value_in in i[attr]:
-            vals.append(i)
+    for i in [j for j in tags.find_all()]:
+        if has_attr(i, attr):
+            if value_in is None:
+                vals.append(i)
+            elif value_in in i[attr]:
+                vals.append(i)
     return vals
 
 
@@ -71,8 +78,8 @@ def extract_paste_box_line2(html_page, tz="US/Central"):
 
     # extract date
     date = extract_date_from_html(str(pbox2), tz)
-
-    return {'user': user, 'timestamp': date}
+    unixts = date_to_timestamp(date)
+    return {'user': user, 'timestamp': date, 'unix': unixts}
 
 
 def extract_text_data(html_page):

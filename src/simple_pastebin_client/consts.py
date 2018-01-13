@@ -5,8 +5,9 @@ LOGGING_FORMAT = '[%(asctime)s - %(name)s] %(message)s'
 
 # urls
 URL = "https://pastebin.com"
-URL_USER = "https://pastebin.com/u/{user}"
+URL_USER = "https://pastebin.com/u/{user}/{page}/0/1/?o=a1"
 URL_RAW = "https://pastebin.com/raw/{raw}"
+URL_SEARCH = "https://pastebin.com/search?q={query}"
 API_POST = "https://pastebin.com/api/api_post.php"
 API_LOGIN = "https://pastebin.com/api/api_login.php"
 API_RAW = "https://pastebin.com/api/api_raw.php"
@@ -46,3 +47,6 @@ CLASS = 'class'
 PBOX_1 = 'paste_box_line1'
 PBOX_2 = 'paste_box_line2'
 TEXTAREA = 'textarea'
+
+
+CSE_QUERY = "https://www.googleapis.com/customsearch/v1element?{key}&rsz=filtered_cse&num=10&hl=en&prettyPrint=false&source=gcsc&gss=.com&sig={sig}&cx={cse_cx}&q={query}&cse_tok={cse_tok}&sort=date&googlehost=www.google.com&callback=google.search.Search.apiary9150"
