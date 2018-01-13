@@ -1,0 +1,9 @@
+toml
+requests
+regex
+flask
+xmljson
+selenium
+beautifulsoup4
+pytz
+tzlocal

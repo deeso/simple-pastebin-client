@@ -1,0 +1,6 @@
+[pastebin-api-client]
+    type = 'pastebin-api-client'
+    api_dev_key = ''
+    api_user_key = ''
+    users_list = [
+                 ]
