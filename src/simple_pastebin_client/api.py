@@ -17,7 +17,7 @@ class PasteBinApiClient(object):
 
     def __init__(self, api_key, api_user_key=None,
                  api_user_name=None, api_user_password=None,
-                 tz_local_name=TZ, search_api=None,
+                 tz_local_name=TZ, search_api_key=None,
                  key=None, sig=None, cse_cx=None, cse_tok=None):
         self.api_key = api_key
         self.api_user_key = api_user_key
@@ -26,7 +26,6 @@ class PasteBinApiClient(object):
         self.key = key
         self.sig = sig
         self.cse_cx = cse_cx
-        self.query = query
         self.cse_tok = cse_tok
         if api_user_password is not None and \
            api_user_name is not None:

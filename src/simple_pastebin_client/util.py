@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup, SoupStrainer
-import datetime
+from datetime import datetime
 from pytz import timezone, utc
 import tzlocal
 from .consts import *
@@ -11,20 +11,30 @@ def extract_date_from_html(html_page, tz='US/Central'):
     spans = [i for i in _span.find_all() if has_attr(i, 'title')]
     if len(spans) == 1:
         return extract_date(spans[0]['title'], tz=tz)
-    else:
-        # TODO fixme this is bad
-        for s in spans:
-            try:
-                if tz_conversion is not None:
-                    tz = tz_conversion(s)
-                    tz = self.tz if tz is None else tz
-                return extract_date(s, tz=tz)
-            except:
-                pass
+
+    # editied
+    for s in spans:
+        new_title = None
+        try:
+            new_title = s['title']
+            if new_title.find('Last edit on: ') == 0:
+                new_title = s['title'].replace('Last edit on: ', '')
+                return extract_date(new_title, tz=tz)
+        except:
+            pass
+    for s in spans:
+        if 'title' not in s:
+            continue
+        try:
+            return extract_date(s['title'], tz=tz)
+        except:
+            pass
     return ''
 
 
 def date_to_timestamp(date_str):
+    if date_str == '':
+        return -1
     return int(datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%SZ").timestamp())
 
 
@@ -32,7 +42,7 @@ def extract_date(date_str, tz='US/Central'):
     tz = tzlocal.get_localzone().zone if tz is None else tz
     nd = date_str.replace('st ', ' ').replace('th ', ' ').replace(' of ', ' ')
     nd = nd.replace('rd ', ' ').replace('nd ', ' ').replace('Augu', 'August')
-    dt = datetime.datetime.strptime(nd, EXPECTED_PB_TIME)
+    dt = datetime.strptime(nd, EXPECTED_PB_TIME)
     dt_loc = timezone(tz).localize(dt)
     return dt_loc.astimezone(utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -78,6 +88,8 @@ def extract_paste_box_line2(html_page, tz="US/Central"):
 
     # extract date
     date = extract_date_from_html(str(pbox2), tz)
+    if date == '':
+        print (pbox2)
     unixts = date_to_timestamp(date)
     return {'user': user, 'timestamp': date, 'unix': unixts}
 
