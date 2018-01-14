@@ -141,7 +141,18 @@ class PasteBinApiClient(object):
                                 'byline': byline})
 
         elif len(html_source) > 1000 and not do_ex:
-            return html_source
+            data = "(".join(html_source.split('(')[1:]).strip(');')
+            data = data.replace('\n', ' ').replace('\r', ' ')
+            json_data = json.loads(data)
+            jrs = json_data['results'] if 'results' in json_data else []
+
+            for jr in jrs:
+                byline = jr['title'].replace('<b>', '').replace('</b>', '')
+                paste = jr['unescapedUrl']
+                pk = None if paste is None else paste.split('/')[-1]
+                results.append({'paste': paste,
+                                'pastekey': pk,
+                                'byline': byline})
         return results
 
     def ipaste_search(self, query):
