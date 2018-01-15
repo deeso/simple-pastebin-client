@@ -129,6 +129,7 @@ class PasteBinApiClient(object):
             client.get(url)
 
         html_source = client.page_source
+        client.quit()
         results = []
         if len(html_source) > 1000 and not do_ex:
             hrefs = extract_elements(html_source, 'a', 'data-ctorig')
@@ -220,10 +221,6 @@ class PasteBinApiClient(object):
     def user_pastes_pages(cls, username):
         url = URL_USER.format(**{'user': username,
                               'page': 1})
-        # options = webdriver.ChromeOptions()
-        # options.add_argument('headless')
-        # client = webdriver.Chrome(chrome_options=options)
-        # client.get(url)
         rsp = requests.get(url, headers=HEADERS)
         data = rsp.text
         return extract_pages(data)
