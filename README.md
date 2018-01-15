@@ -95,6 +95,118 @@ print (len(u), '\n', u)
 last_page = PasteBinApiClient.user_pastes_pages(user)
 u = PasteBinApiClient.user_pastes_data(user, page=last_page)
 
+
+# practical use case
+interesting_users = set()
+query_terms = [
+    'adwind malware',
+    'adylkuzz malware',
+    'alphacrypt malware',
+    'andromeda malware',
+    'angler malware',
+    'asprox malware',
+    'backoff malware',
+    'bamital malware',
+    'banjori malware',
+    'bebloh malware',
+    'bedep malware',
+    'beebone malware',
+    'blackenergy malware',
+    'brobot malware',
+    'caphaw malware',
+    'carbanak malware',
+    'cerber malware',
+    'conficker malware',
+    'corebot malware',
+    'cryptxxx malware',
+    'cryptodefense malware',
+    'cryptolocker malware',
+    'cryptominer malware',
+    'cryptowall malware',
+    'darkleech malware',
+    'dexter malware',
+    'dircrypt malware',
+    'dridex malware',
+    'dyre malware',
+    'eitest malware',
+    'emotet malware',
+    'explosive malware',
+    'fiesta malware',
+    'fobber malware',
+    'formbook malware',
+    'gameover zeus malware',
+    'geodo malware',
+    'globeimposter malware',
+    'hailstorm malware',
+    'hancitor malware',
+    'havex malware',
+    'hesperbot malware',
+    'icedid malware',
+    'infinity malware',
+    'kelihos malware',
+    'kraken malware',
+    'kuluoz malware',
+    'locky malware',
+    'magnitude malware',
+    'mask malware',
+    'matsnu malware',
+    'mirai malware',
+    'murofet malware',
+    'necurs malware',
+    'neutrino malware',
+    'nuclear malware',
+    'nyetya malware',
+    'odin malware',
+    'padcrypt malware',
+    'petya malware',
+    'pony malware',
+    'pushdo malware',
+    'pykspa malware',
+    'qadars malware',
+    'qakbot malware',
+    'ramdo malware',
+    'ramnit malware',
+    'ranbyus malware',
+    'reign malware',
+    'rig malware',
+    'rovnix malware',
+    'shiotob malware',
+    'sisron malware',
+    'sofacy malware',
+    'sundown malware',
+    'suppobox malware',
+    'sweetorange malware',
+    'symmi malware',
+    'tempedreve malware',
+    'terdot malware',
+    'teslacrypt malware',
+    'tinba malware',
+    'torrentlocker malware',
+    'trickbot malware',
+    'upatre malware',
+    'vawtrak malware',
+    'wannacry malware',
+    'webcryptominer malware',
+    'wirelurker malware',
+    'x-agent malware',
+    'xpiro malware',
+    'zbot malware',
+    'zepto malware',
+]
+
+for qt in query_terms:
+    c = PasteBinApiClient.paste_search(qt)
+    for i in c:
+        pastekey = i['paste_key']
+        p = PasteBinApiClient.paste(pastekey)
+        if len(p['user']) > 0:
+            interesting_users.add(p['user'])
+
+print ("Interesting Pastebin Users")
+for user in sorted(interesting_users):
+    print ("https://pastebin.com/u/"+user)
+
+
 ```
 
 
