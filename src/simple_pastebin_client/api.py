@@ -76,7 +76,7 @@ class PasteBinApiClient(object):
                 API_OPTION: SHOW_PASTE,
                 API_DEV_KEY: self.api_key,
                 API_USER_KEY: self.api_user_key,
-                API_PASTE_KEY: paste_key
+                API_paste_key: paste_key
                 }
         rsp = requests.post(API_RAW, data=data)
         return rsp.content
@@ -133,12 +133,14 @@ class PasteBinApiClient(object):
         if len(html_source) > 1000 and not do_ex:
             hrefs = extract_elements(html_source, 'a', 'data-ctorig')
             for href in hrefs:
-                byline = href.next_sibling.text
+                title = href.next_sibling.text
+                if title.find('clipped from Google -') == 0:
+                    continue
                 paste = href.get('data-ctorig', None)
                 pk = None if paste is None else paste.split('/')[-1]
                 results.append({'paste': paste,
-                                'pastekey': pk,
-                                'byline': byline})
+                                'paste_key': pk,
+                                'title': title})
 
         elif len(html_source) > 1000 and not do_ex:
             data = "(".join(html_source.split('(')[1:]).strip(');')
@@ -147,12 +149,14 @@ class PasteBinApiClient(object):
             jrs = json_data['results'] if 'results' in json_data else []
 
             for jr in jrs:
-                byline = jr['title'].replace('<b>', '').replace('</b>', '')
+                title = jr['title'].replace('<b>', '').replace('</b>', '')
+                if title.find('clipped from Google -') == 0:
+                    continue
                 paste = jr['unescapedUrl']
                 pk = None if paste is None else paste.split('/')[-1]
                 results.append({'paste': paste,
-                                'pastekey': pk,
-                                'byline': byline})
+                                'paste_key': pk,
+                                'title': title})
         return results
 
     def ipaste_search(self, query):
@@ -165,6 +169,7 @@ class PasteBinApiClient(object):
         url = URL + "/raw/" + paste_key
         info = extract_paste_content(cls.paste_html(paste_key), tz)
         info['paste'] = url
+        info['paste_key'] = paste_key
         if get_raw:
             info['data'] = cls.raw_paste(paste_key)
         return info
@@ -185,27 +190,26 @@ class PasteBinApiClient(object):
     @classmethod
     def user_pastes_data(cls, username, page=1, tz=None, do_all=False):
         results = []
-        pastes_summary = cls.user_pastes(username, page=page)
+        pastes_summary = cls.user_pastes(username, page=page, do_all=do_all)
         for info in pastes_summary:
-            add = cls.paste(info['pastekey'], get_raw=True, tz=tz, do_all=do_all)
+            add = cls.paste(info['paste_key'], get_raw=True, tz=tz)
             info.update(add)
             results.append(info)
         return results
 
     @classmethod
     def user_pastes(cls, username, page=1, do_all=False):
-        pages = 1
-        pos = 0
+        pages = page+1
+        pos = page
         results = []
         if do_all:
-            pages = cls.user_pastes_pages(username)
-        else:
-            pos = page-1
-            pages = page
+            pages = cls.user_pastes_pages(username) + 1
+            pages = 1 if pages <= 1 else pages
+            pos = 0
 
         while pos < pages:
             url = URL_USER.format(**{'user': username,
-                                  'page': page+1})
+                                  'page': page})
             rsp = requests.get(url, headers=HEADERS)
             data = rsp.text
             results = results + extract_user_pastes_titles_date(data)

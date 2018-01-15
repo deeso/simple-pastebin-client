@@ -166,7 +166,7 @@ def extract_user_row_info(table_row):
     expiration = tds[2].text
     hits = tds[3].text
     syntax = tds[4].text
-    return {'pastekey': paste, 'title': title,
+    return {'paste_key': paste, 'title': title,
             'paste': URL+'/'+paste,
             'hits': hits, 'syntax': syntax,
             'unix': unixts, 'expiration': expiration}
