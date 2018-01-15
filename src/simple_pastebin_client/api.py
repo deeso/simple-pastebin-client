@@ -7,8 +7,9 @@ import tzlocal
 import json
 import urllib
 from googleapiclient.discovery import build
-from .util import extract_pastes_titles, extract_elements, \
-                  extract_paste_content, extract_date_from_html
+from .util import extract_pages, extract_elements, \
+                  extract_paste_content, extract_date_from_html, \
+                  extract_user_pastes_titles_date
 
 
 class PasteBinApiClient(object):
@@ -182,21 +183,46 @@ class PasteBinApiClient(object):
         return extract_date_from_html(html_page, tz=tz)
 
     @classmethod
-    def user_pastes(cls, username, page=1, tz=None):
+    def user_pastes_data(cls, username, page=1, tz=None, do_all=False):
         results = []
+        pastes_summary = cls.user_pastes(username, page=page)
+        for info in pastes_summary:
+            add = cls.paste(info['pastekey'], get_raw=True, tz=tz, do_all=do_all)
+            info.update(add)
+            results.append(info)
+        return results
+
+    @classmethod
+    def user_pastes(cls, username, page=1, do_all=False):
+        pages = 1
+        pos = 0
+        results = []
+        if do_all:
+            pages = cls.user_pastes_pages(username)
+        else:
+            pos = page-1
+            pages = page
+
+        while pos < pages:
+            url = URL_USER.format(**{'user': username,
+                                  'page': page+1})
+            rsp = requests.get(url, headers=HEADERS)
+            data = rsp.text
+            results = results + extract_user_pastes_titles_date(data)
+            pos += 1
+        return results
+
+    @classmethod
+    def user_pastes_pages(cls, username):
         url = URL_USER.format(**{'user': username,
-                              'page': page})
+                              'page': 1})
         # options = webdriver.ChromeOptions()
         # options.add_argument('headless')
         # client = webdriver.Chrome(chrome_options=options)
         # client.get(url)
         rsp = requests.get(url, headers=HEADERS)
         data = rsp.text
-        pastes_titles = extract_pastes_titles(data)
-        for p, t in pastes_titles:
-            info = cls.paste(p, get_raw=True)
-            results.append(info)
-        return results
+        return extract_pages(data)
 
     @classmethod
     def xml_to_json(cls, data):

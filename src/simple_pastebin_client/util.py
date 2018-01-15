@@ -47,6 +47,16 @@ def extract_date(date_str, tz='US/Central'):
     return dt_loc.astimezone(utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def extract_date_user_page(date_str):
+    tz = tzlocal.get_localzone().zone
+    nd = date_str.replace(',', '').replace('st ', ' ')
+    nd = nd.replace('th ', ' ').replace(' of ', ' ')
+    nd = nd.replace('rd ', ' ').replace('nd ', ' ').replace('Augu', 'August')
+    dt = datetime.strptime(nd, "%b %d %y")
+    dt_loc = timezone(tz).localize(dt)
+    return dt_loc.astimezone(utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def extract_elements(html_page, tag, attr, value_in=None):
     tags = BeautifulSoup(html_page, 'html.parser',
                          parse_only=SoupStrainer(tag))
@@ -88,8 +98,6 @@ def extract_paste_box_line2(html_page, tz="US/Central"):
 
     # extract date
     date = extract_date_from_html(str(pbox2), tz)
-    if date == '':
-        print (pbox2)
     unixts = date_to_timestamp(date)
     return {'user': user, 'timestamp': date, 'unix': unixts}
 
@@ -138,3 +146,73 @@ def extract_pastes_titles(content):
     pastes_titles = [[i['href'].strip('/'), i.text] for i in _hrefs.find_all()
                      if has_attr(i, 'href') and i['href'] in hrefs]
     return pastes_titles
+
+
+def extract_user_row_info(table_row):
+    _tds = BeautifulSoup(str(table_row), 'html.parser',
+                         parse_only=SoupStrainer('td'))
+    # NAME / TITLE  ADDED   EXPIRES HITS    SYNTAX
+    tds = [i for i in _tds]
+    if len(_tds) != 6:
+        return None
+
+    _hrefs = BeautifulSoup(str(tds[0]), 'html.parser',
+                           parse_only=SoupStrainer('a')).find_all()
+    paste = _hrefs[0]['href'].lstrip('/')
+    title = _hrefs[0].text
+
+    date = extract_date_user_page(tds[1].text)
+    unixts = date_to_timestamp(date)
+    expiration = tds[2].text
+    hits = tds[3].text
+    syntax = tds[4].text
+    return {'pastekey': paste, 'title': title,
+            'paste': URL+'/'+paste,
+            'hits': hits, 'syntax': syntax,
+            'unix': unixts, 'expiration': expiration}
+
+
+def extract_user_pastes_titles_date(content):
+
+    _tables = BeautifulSoup(content, 'html.parser',
+                            parse_only=SoupStrainer('table'))
+    for t in _tables.find_all():
+        if has_attr(t, 'class'):
+            content = str(t)
+            break
+
+    _trs = BeautifulSoup(content, 'html.parser',
+                         parse_only=SoupStrainer('tr'))
+    results = []
+    for tr in _trs:
+        if 'class' in tr:
+            continue
+        r = extract_user_row_info(tr)
+        if r is not None:
+            results.append(r)
+
+    return results
+
+
+def extract_pages(content):
+    _divs = BeautifulSoup(content, 'html.parser',
+                          parse_only=SoupStrainer('div')).find_all()
+
+    pagination = [i for i in _divs if 'class' in i.attrs and
+                  'pagination' in i['class']]
+
+    if len(pagination) == 0:
+        return -1
+
+    _hrefs = BeautifulSoup(str(pagination), 'html.parser',
+                           parse_only=SoupStrainer('a')).find_all()
+
+    pages = [1]
+    for h in _hrefs:
+        if h.text is None:
+            continue
+
+        if h.text.isdigit():
+            pages.append(int(h.text))
+
+    return max(pages)
