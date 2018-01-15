@@ -37,6 +37,8 @@ p = PasteBinApiClient.user_pastes(username, do_all=True)
 
 ## Some Caveats
 
-Search is performed using Selenium and headless Chrome, so the request is slow.
+1. I have only tested this software on Linux, and it will not work in enterprise environments that require HTTP proxies until I add support for proxies.
+
+2. Search is performed using Selenium and headless Chrome, so the request is slow.
 
 
