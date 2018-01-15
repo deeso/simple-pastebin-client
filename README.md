@@ -96,116 +96,6 @@ last_page = PasteBinApiClient.user_pastes_pages(user)
 u = PasteBinApiClient.user_pastes_data(user, page=last_page)
 
 
-# practical use case
-interesting_users = set()
-query_terms = [
-    'adwind malware',
-    'adylkuzz malware',
-    'alphacrypt malware',
-    'andromeda malware',
-    'angler malware',
-    'asprox malware',
-    'backoff malware',
-    'bamital malware',
-    'banjori malware',
-    'bebloh malware',
-    'bedep malware',
-    'beebone malware',
-    'blackenergy malware',
-    'brobot malware',
-    'caphaw malware',
-    'carbanak malware',
-    'cerber malware',
-    'conficker malware',
-    'corebot malware',
-    'cryptxxx malware',
-    'cryptodefense malware',
-    'cryptolocker malware',
-    'cryptominer malware',
-    'cryptowall malware',
-    'darkleech malware',
-    'dexter malware',
-    'dircrypt malware',
-    'dridex malware',
-    'dyre malware',
-    'eitest malware',
-    'emotet malware',
-    'explosive malware',
-    'fiesta malware',
-    'fobber malware',
-    'formbook malware',
-    'gameover zeus malware',
-    'geodo malware',
-    'globeimposter malware',
-    'hailstorm malware',
-    'hancitor malware',
-    'havex malware',
-    'hesperbot malware',
-    'icedid malware',
-    'infinity malware',
-    'kelihos malware',
-    'kraken malware',
-    'kuluoz malware',
-    'locky malware',
-    'magnitude malware',
-    'mask malware',
-    'matsnu malware',
-    'mirai malware',
-    'murofet malware',
-    'necurs malware',
-    'neutrino malware',
-    'nuclear malware',
-    'nyetya malware',
-    'odin malware',
-    'padcrypt malware',
-    'petya malware',
-    'pony malware',
-    'pushdo malware',
-    'pykspa malware',
-    'qadars malware',
-    'qakbot malware',
-    'ramdo malware',
-    'ramnit malware',
-    'ranbyus malware',
-    'reign malware',
-    'rig malware',
-    'rovnix malware',
-    'shiotob malware',
-    'sisron malware',
-    'sofacy malware',
-    'sundown malware',
-    'suppobox malware',
-    'sweetorange malware',
-    'symmi malware',
-    'tempedreve malware',
-    'terdot malware',
-    'teslacrypt malware',
-    'tinba malware',
-    'torrentlocker malware',
-    'trickbot malware',
-    'upatre malware',
-    'vawtrak malware',
-    'wannacry malware',
-    'webcryptominer malware',
-    'wirelurker malware',
-    'x-agent malware',
-    'xpiro malware',
-    'zbot malware',
-    'zepto malware',
-]
-
-for qt in query_terms:
-    c = PasteBinApiClient.paste_search(qt)
-    for i in c:
-        pastekey = i['paste_key']
-        p = PasteBinApiClient.paste(pastekey)
-        if len(p['user']) > 0:
-            interesting_users.add(p['user'])
-
-print ("Interesting Pastebin Users")
-for user in sorted(interesting_users):
-    print ("https://pastebin.com/u/"+user)
-
 
 ```
 
@@ -220,3 +110,55 @@ for user in sorted(interesting_users):
 
 4. Tests were done by hand, because this was a small weekend project.  If this project matures, I'll add more formal testing. 
 
+
+# Script for finding some interesting people
+
+```
+from simple_pastebin_client.api import PasteBinApiClient
+from threading import Thread
+import time
+
+
+interesting_users = set()
+query_terms = [
+  'interesting search terms',
+  'more interesting search terms',
+]
+
+
+def search_term(qt, result_set):
+    c = PasteBinApiClient.paste_search(qt)
+    for i in c:
+        pastekey = i['paste_key']
+        p = PasteBinApiClient.paste(pastekey)
+        if len(p['user']) > 0 and p['user'] not in result_set:
+            print("Found a user: %s" % p['user'])
+            result_set.add(p['user'])
+
+
+def find_interesting_users(query_terms):
+    threads = []
+    interesting_users = set()
+    for qt in query_terms:
+        thread = Thread(target=search_term, args=(qt, interesting_users))
+        thread.start()
+        time.sleep(1.0)
+        threads.append(thread)
+        print ("Started enumeration of users for query term: '{}'".format(qt))
+        while len(threads) > 10:
+            print ("Waiting on threads to complete before starting more")
+            time.sleep(10.0)
+            threads = [i for i in threads if i.is_alive()]
+
+    for t in threads:
+        t.join()
+    return interesting_users
+
+
+
+
+print ("Interesting Pastebin Users")
+for user in sorted(interesting_users):
+    print ("https://pastebin.com/u/"+user)
+
+```
