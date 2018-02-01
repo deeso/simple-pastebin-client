@@ -9,7 +9,7 @@ import urllib
 from googleapiclient.discovery import build
 from .util import extract_pages, extract_elements, \
                   extract_paste_content, extract_date_from_html, \
-                  extract_user_pastes_titles_date
+                  extract_user_pastes_titles_date, date_to_timestamp
 
 
 class PasteBinApiClient(object):
@@ -189,22 +189,42 @@ class PasteBinApiClient(object):
         return extract_date_from_html(html_page, tz=tz)
 
     @classmethod
-    def user_pastes_data(cls, username, page=1, tz=None, do_all=False):
+    def user_pastes_data(cls, username, page=1, tz=None,
+                         do_all=False, after_ts=None):
         results = []
-        pastes_summary = cls.user_pastes(username, page=page, do_all=do_all)
+        pastes_summary = cls.user_pastes(username, page=page, do_all=do_all,
+                                         after_ts=after_ts)
+
+        pastes_summary.reverse()
+        after_ux_ts = None
+        after_day_ux_ts = None
+        if after_ts is not None:
+            after_ux_ts = date_to_timestamp(after_ts)
+            after_day_ux_ts = date_to_timestamp(after_ts, day=True)
+
         for info in pastes_summary:
+            if after_day_ux_ts is not None and info['unix'] < after_day_ux_ts:
+                continue
             add = cls.paste(info['paste_key'], get_raw=True, tz=tz)
             info.update(add)
+            # must check the timestamp here otherwise the
+            # granularity is to the day before updating the info
             results.append(info)
+
+        results = [i for i in results if i['unix'] > after_ux_ts]
         return results
 
     @classmethod
-    def user_pastes(cls, username, page=1, do_all=False):
+    def user_pastes(cls, username, page=1, do_all=False, after_ts=None):
+        max_pages = cls.user_pastes_pages(username) + 1
         pages = page+1
         pos = page
+        if pages > max_pages:
+            return []
+
         results = []
         if do_all:
-            pages = cls.user_pastes_pages(username) + 1
+            pages = max_pages
             pages = 1 if pages <= 1 else pages
             pos = 0
 
@@ -215,7 +235,8 @@ class PasteBinApiClient(object):
             data = rsp.text
             results = results + extract_user_pastes_titles_date(data)
             pos += 1
-        return results
+
+        return sorted(results, key=lambda x: x['unix'])
 
     @classmethod
     def user_pastes_pages(cls, username):

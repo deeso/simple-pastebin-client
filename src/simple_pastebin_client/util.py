@@ -33,10 +33,15 @@ def extract_date_from_html(html_page, tz='US/Central'):
     return ''
 
 
-def date_to_timestamp(date_str):
+def date_to_timestamp(date_str, day=False):
     if date_str == '':
         return -1
-    unix_ts = mktime(datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%SZ").timetuple())
+    unix_ts = 0
+    if not day:
+        unix_ts = mktime(datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%SZ").timetuple())
+    else:
+        date_str = date_str.split('T')[0]
+        unix_ts = mktime(datetime.strptime(date_str, "%Y-%m-%d").timetuple())
     return int(unix_ts)
 
 
@@ -169,7 +174,7 @@ def extract_user_row_info(table_row):
     hits = tds[3].text
     syntax = tds[4].text
     return {'paste_key': paste, 'title': title,
-            'paste': URL+'/'+paste,
+            'paste': URL+'/'+paste, 'timestamp': date,
             'hits': hits, 'syntax': syntax,
             'unix': unixts, 'expiration': expiration}
 
