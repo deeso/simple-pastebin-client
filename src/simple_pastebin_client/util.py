@@ -3,6 +3,7 @@ from datetime import datetime
 from pytz import timezone, utc
 import tzlocal
 from .consts import *
+from time import mktime
 
 
 def extract_date_from_html(html_page, tz='US/Central'):
@@ -35,7 +36,8 @@ def extract_date_from_html(html_page, tz='US/Central'):
 def date_to_timestamp(date_str):
     if date_str == '':
         return -1
-    return int(datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%SZ").timestamp())
+    unix_ts = mktime(datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%SZ").timetuple())
+    return int(unix_ts)
 
 
 def extract_date(date_str, tz='US/Central'):
