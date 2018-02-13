@@ -34,6 +34,8 @@ def extract_date_from_html(html_page, tz='US/Central'):
 
 
 def date_to_timestamp(date_str, day=False):
+    if date_str.isdigit():
+        return int(date_str)
     if date_str == '':
         return -1
     unix_ts = 0
