@@ -194,7 +194,6 @@ class PasteBinApiClient(object):
         results = []
         pastes_summary = cls.user_pastes(username, page=page, do_all=do_all,
                                          after_ts=after_ts)
-
         pastes_summary.reverse()
         after_ux_ts = None
         after_day_ux_ts = None
@@ -236,6 +235,15 @@ class PasteBinApiClient(object):
             results = results + extract_user_pastes_titles_date(data)
             pos += 1
 
+        mapped_pastes_summary = {}
+        for ps in results:
+            key = ps['paste_key']
+            if key not in mapped_pastes_summary:
+                mapped_pastes_summary[key] = ps
+            else:
+                mapped_pastes_summary[key].update(ps)
+
+        results = [i for i in mapped_pastes_summary.values()]
         return sorted(results, key=lambda x: x['unix'])
 
     @classmethod
