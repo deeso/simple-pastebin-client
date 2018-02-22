@@ -51,9 +51,16 @@ def extract_date(date_str, tz='US/Central'):
     tz = tzlocal.get_localzone().zone if tz is None else tz
     nd = date_str.replace('st ', ' ').replace('th ', ' ').replace(' of ', ' ')
     nd = nd.replace('rd ', ' ').replace('nd ', ' ').replace('Augu', 'August')
-    dt = datetime.strptime(nd, EXPECTED_PB_TIME)
-    dt_loc = timezone(tz).localize(dt)
-    return dt_loc.astimezone(utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        dt = datetime.strptime(nd, EXPECTED_PB_TIME)
+        dt_loc = timezone(tz).localize(dt)
+        return dt_loc.astimezone(utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    except:
+        nnd = " ".join(nd.split()[:-1])
+        dt = datetime.strptime(nnd, MEXPECTED_PB_TIME)
+        dt_loc = timezone(tz).localize(dt)
+        return dt_loc.astimezone(utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
 
 
 def extract_date_user_page(date_str):

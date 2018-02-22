@@ -41,6 +41,7 @@ MFF = 'Mozilla/5.0 (Windows NT x.y; rv:10.0) Gecko/20100101 Firefox/10.0'
 HEADERS = {'User-Agent': MFF}
 
 EXPECTED_PB_TIME = "%A %d %B %Y  %H:%M:%S %p %Z"
+MEXPECTED_PB_TIME = "%A %d %B %Y  %H:%M:%S %p"
 
 DIV = 'div'
 CLASS = 'class'
